@@ -89,6 +89,18 @@ mod runtime {
     //! at least in 1.27.0, the functions don't inline, leaving using it
     //! actually *slower* than just using the scalar fallback.
 
+    #[cfg(feature = "phala-sgx")]
+    macro_rules! has_x86_feature {
+        ($feature:tt) => {
+            sgx_trts::is_x86_feature_detected!($feature)
+        };
+    }
+    #[cfg(not(feature = "phala-sgx"))]
+    macro_rules! has_x86_feature {
+        ($feature:tt) => {
+            is_x86_feature_detected!($feature)
+        };
+    }
     use core::sync::atomic::{AtomicUsize, Ordering};
 
     static FEATURE: AtomicUsize = AtomicUsize::new(0);
@@ -98,15 +110,15 @@ mod runtime {
     pub fn detect() -> usize {
         let feat = FEATURE.load(Ordering::Relaxed);
         if feat == INIT {
-            if cfg!(target_arch = "x86_64") && sgx_trts::is_x86_feature_detected!("avx2") {
-                if sgx_trts::is_x86_feature_detected!("sse4.2") {
+            if cfg!(target_arch = "x86_64") && has_x86_feature!("avx2") {
+                if has_x86_feature!("sse4.2") {
                     FEATURE.store(super::AVX_2_AND_SSE_42, Ordering::Relaxed);
                     return super::AVX_2_AND_SSE_42;
                 } else {
                     FEATURE.store(super::AVX_2, Ordering::Relaxed);
                     return super::AVX_2;
                 }
-            } else if sgx_trts::is_x86_feature_detected!("sse4.2") {
+            } else if has_x86_feature!("sse4.2") {
                 FEATURE.store(super::SSE_42, Ordering::Relaxed);
                 return super::SSE_42;
             } else {
@@ -197,7 +209,7 @@ mod sse42_compile_time {
     }
 
     pub fn detect() -> usize {
-        if sgx_trts::is_x86_feature_detected!("sse4.2") {
+        if has_x86_feature!("sse4.2") {
             super::SSE_42
         } else {
             super::NONE
@@ -263,9 +275,9 @@ mod avx2_compile_time {
     }
 
     pub fn detect() -> usize {
-        if cfg!(target_arch = "x86_64") && sgx_trts::is_x86_feature_detected!("avx2") {
+        if cfg!(target_arch = "x86_64") && has_x86_feature!("avx2") {
             super::AVX_2_AND_SSE_42
-        } else if sgx_trts::is_x86_feature_detected!("sse4.2") {
+        } else if has_x86_feature!("sse4.2") {
             super::SSE_42
         } else {
             super::NONE
