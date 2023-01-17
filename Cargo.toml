@@ -19,7 +19,7 @@ std = []
 phala-sgx = ["sgx_trts"]
 
 [dependencies]
-sgx_trts = { rev = "v1.1.3", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
+sgx_trts = { rev = "715ee87e", git = "https://github.com/apache/teaclave-sgx-sdk.git", optional = true }
 
 [dev-dependencies]
 pico-sys = "0.0.1"
